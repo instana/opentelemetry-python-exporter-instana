@@ -1,0 +1,127 @@
+version: 2.1
+
+commands:
+  lint-with-pre-commit:
+    steps:
+      - checkout
+      - run:
+          name: Lint with pre-commit
+          command: |
+            pip install --upgrade virtualenv==20.14.1
+            virtualenv venv
+            . venv/bin/activate
+            pip install --editable .
+            pip install pre-commit
+            pre-commit run --all-files
+
+  build-wheel:
+    steps:
+      - checkout
+      - run:
+          name: Build Python package in wheel format
+          command: |
+            python setup.py bdist_wheel
+            mkdir -p workspace
+            mv dist tests workspace/
+      - persist_to_workspace:
+          root: workspace
+          # Must be relative path from root
+          paths:
+            - dist
+            - tests
+      - store_artifacts:
+          path: workspace/dist
+
+  install-package-in-venv:
+    steps:
+      - run:
+          name: Install Python package in a virtual environment
+          command: |
+            virtualenv venv
+            . venv/bin/activate
+            pip install /tmp/workspace/dist/*.whl
+
+  install-test-deps:
+    parameters:
+      requirements:
+        default: "/tmp/workspace/tests/requirements.txt"
+        type: string
+    steps:
+      - run:
+          name: Install Python Dependencies for the test
+          command: |
+            . venv/bin/activate
+            pip install --requirement <<parameters.requirements>>
+
+  execute-tests:
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - install-package-in-venv
+      - install-test-deps
+      - run:
+          name: Execute tests with pytest
+          environment:
+            INSTANA_TEST: "true"
+          command: |
+            . venv/bin/activate
+            pytest -v /tmp/workspace/tests
+
+jobs:
+  lint:
+    docker:
+      - image: cimg/python:3.10.4
+    steps:
+      - lint-with-pre-commit
+
+  build:
+    docker:
+      - image: cimg/python:3.10.4
+    working_directory: ~/repo
+    steps:
+      - build-wheel
+
+  python37:
+    docker:
+      - image: cimg/python:3.7.13
+    steps:
+      - execute-tests
+
+  python38:
+    docker:
+      - image: cimg/python:3.8.13
+    steps:
+      - execute-tests
+
+  python39:
+    docker:
+      - image: cimg/python:3.9.12
+    steps:
+      - execute-tests
+
+  python310:
+    docker:
+      - image: cimg/python:3.10.4
+    steps:
+      - execute-tests
+
+workflows:
+  version: 2
+  build_lint_test:
+    jobs:
+      - lint
+      - build:
+          requires:
+            - lint
+      - python37:
+          requires:
+            - build
+      - python38:
+          requires:
+            - build
+      - python39:
+          requires:
+            - build
+      - python310:
+          requires:
+            - build

@@ -1,0 +1,9 @@
+# Compatibility with black
+# https://black.readthedocs.io/en/stable/guides
+# /using_black_with_other_tools.html?highlight=flake#configuration
+# and opentelemetry-python-contrib's flake8 settings:
+# https://github.com/open-telemetry/
+# opentelemetry-python-contrib/blob/main/.flake8
+[flake8]
+max-line-length = 88
+extend-ignore = E203

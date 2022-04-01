@@ -1,0 +1,17 @@
+# (c) Copyright IBM Corp. 2022 All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# This requirements.txt is only used by the GitHub dependency graph,
+# and only duplicates the requirements that are listed in setup.cfg,
+# as currently setup.cfg is not supported:
+#
+# https://github.com/dependabot
+# /dependabot-core/issues/2133#issuecomment-1030839748
+#
+# TODO:
+# Once the GitHub issue is resolved, then this file should be removed.
+#
+
+instana>=1.37.1
+opentelemetry-api>=1.11.1
+opentelemetry-sdk>=1.11.1
