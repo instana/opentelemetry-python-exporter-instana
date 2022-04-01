@@ -1,0 +1,70 @@
+version: 2.1
+
+commands:
+  pip-install-deps:
+    parameters:
+      requirements:
+        default: "tests/requirements.txt"
+        type: string
+    steps:
+      - run:
+          name: Install Python Dependencies
+          command: |
+            python -m venv venv
+            . venv/bin/activate
+            pip install --upgrade pip
+            pip install -r <<parameters.requirements>>
+            pip install -e .
+jobs:
+  python38:
+    docker:
+      - image: cimg/python:3.8.12
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - pip-install-deps
+      - run:
+          name: run tests
+          environment:
+            INSTANA_TEST: "true"
+          command: |
+            . venv/bin/activate
+            pytest -v
+
+  python39:
+    docker:
+      - image: cimg/python:3.9.10
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - pip-install-deps
+      - run:
+          name: run tests
+          environment:
+            INSTANA_TEST: "true"
+          command: |
+            . venv/bin/activate
+            pytest -v
+
+  python310:
+    docker:
+      - image: cimg/python:3.10.2
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - pip-install-deps
+      - run:
+          name: run tests
+          environment:
+            INSTANA_TEST: "true"
+          command: |
+            . venv/bin/activate
+            pytest -v
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - python38
+      - python39
+      - python310
